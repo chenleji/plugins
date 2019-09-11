@@ -1,0 +1,27 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "8vfkLUPdvy+Db2cOIHQU8sA7pA4=",
+			"path": "github.com/coreos/flannel/pkg/ip",
+			"revision": "288fb58f91f5a157a7b14df2ce56604df5024829",
+			"revisionTime": "2019-08-28T18:43:39Z"
+		},
+		{
+			"checksumSHA1": "piJodLRjRfXbaRcMv3nP8KQ+xAQ=",
+			"origin": "github.com/coreos/flannel/vendor/github.com/rakelkar/gonetsh/netsh",
+			"path": "github.com/rakelkar/gonetsh/netsh",
+			"revision": "288fb58f91f5a157a7b14df2ce56604df5024829",
+			"revisionTime": "2019-08-28T18:43:39Z"
+		},
+		{
+			"checksumSHA1": "LobRZAL8uT3gO/rWKF9ya0hpNLg=",
+			"origin": "github.com/coreos/flannel/vendor/k8s.io/utils/exec",
+			"path": "k8s.io/utils/exec",
+			"revision": "288fb58f91f5a157a7b14df2ce56604df5024829",
+			"revisionTime": "2019-08-28T18:43:39Z"
+		}
+	],
+	"rootPath": "github.com/containernetworking/plugins"
+}
