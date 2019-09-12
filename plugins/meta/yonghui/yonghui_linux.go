@@ -27,8 +27,10 @@ import (
 	"github.com/containernetworking/cni/pkg/types"
 	"github.com/containernetworking/plugins/plugins/ipam/host-local/backend/allocator"
 	"github.com/coreos/flannel/pkg/ip"
+	"github.com/vishvananda/netlink"
 	"net"
 	"os"
+	"syscall"
 )
 
 func doCmdAdd(args *skel.CmdArgs, n *NetConf, fenv *subnetEnv) error {
@@ -58,6 +60,23 @@ func doCmdAdd(args *skel.CmdArgs, n *NetConf, fenv *subnetEnv) error {
 		n.Delegate["cniVersion"] = n.CNIVersion
 	}
 
+	// ensure bridge ip
+	brIpNet := ip.IP4Net{
+		IP:        ip.FromIP(fenv.sn.IP) + 1,
+		PrefixLen: ip.FromIPNet(fenv.nw).PrefixLen,
+	}
+
+	br, err := bridgeByName(defaultBridgeName)
+	if err != nil {
+		panic(err)
+	}
+
+	if _, err = ensureBridgeIP(br, &brIpNet); err != nil {
+		_ = fmt.Errorf("failed to set ip %v on bridge %v", brIpNet.String(), defaultBridgeName)
+		return err
+	}
+
+	// prepare IPAM args
 	defaultNet := &net.IPNet{
 		IP:   net.IPv4zero,
 		Mask: net.IPMask(net.IPv4zero),
@@ -107,9 +126,6 @@ func doCmdAdd(args *skel.CmdArgs, n *NetConf, fenv *subnetEnv) error {
 				Dst: *defaultNet,
 				GW:  net.ParseIP(gw),
 			},
-			//{
-			//	Dst: *fenv.nw,
-			//},
 		},
 	}
 
@@ -146,11 +162,6 @@ func getIpRangeByCIDR(cidr string) (string, string, error) {
 	}
 
 	return ips[1], ips[len(ips)-2], nil
-
-	//minIp := (ip.FromIP(ipc) + 1).String()
-	//maxIp := (ip.FromIP(ipOrMask(ipc, ipNet.Mask)) - 1).String()
-	//
-	//return minIp, maxIp, nil
 }
 
 func getIpRangeWithoutGwByCIDR(cidr, gw string) (string, string, error) {
@@ -170,29 +181,7 @@ func getIpRangeWithoutGwByCIDR(cidr, gw string) (string, string, error) {
 	}
 	// remove network address and broadcast address
 	return ips[2], ips[len(ips)-2], nil
-
-	//minIp := (ip.FromIP(ipc) + 1).String()
-	//maxIp := (ip.FromIP(ipOrMask(ipc, ipNet.Mask)) - 1).String()
-	//
-	//// skip gateway ip
-	//if gw == maxIp {
-	//	return minIp, (ip.FromIP(ipOrMask(ipc, ipNet.Mask)) - 2).String(), nil
-	//}
-	//
-	//return minIp, maxIp, nil
 }
-
-//func ipOrMask(ip net.IP, mask net.IPMask) net.IP {
-//	n := len(ip)
-//	if n != len(mask) {
-//		return nil
-//	}
-//	out := make(net.IP, n)
-//	for i := 0; i < n; i++ {
-//		out[i] = ip[i] | mask[i]
-//	}
-//	return out
-//}
 
 func inc(ip net.IP) {
 	for j := len(ip) - 1; j >= 0; j-- {
@@ -201,4 +190,44 @@ func inc(ip net.IP) {
 			break
 		}
 	}
+}
+
+func bridgeByName(name string) (*netlink.Bridge, error) {
+	l, err := netlink.LinkByName(name)
+	if err != nil {
+		return nil, fmt.Errorf("could not lookup %q: %v", name, err)
+	}
+	br, ok := l.(*netlink.Bridge)
+	if !ok {
+		return nil, fmt.Errorf("%q already exists but is not a bridge", name)
+	}
+	return br, nil
+}
+
+func ensureBridgeIP(br *netlink.Bridge, ip4Net *ip.IP4Net) (string, error) {
+	link, err := netlink.LinkByName(br.Name)
+	if err != nil {
+		return "", fmt.Errorf("failed to lookup %q: %v", br.Name, err)
+	}
+
+	addrs, err := netlink.AddrList(link, syscall.AF_INET)
+	if err != nil && err != syscall.ENOENT {
+		return "", fmt.Errorf("could not get list of IP addresses: %v", err)
+	}
+	if len(addrs) > 0 {
+		bridgeIPStr := ip4Net.String()
+		for _, a := range addrs {
+			if a.IPNet.String() == bridgeIPStr {
+				// Bridge IP already set, nothing to do
+				return bridgeIPStr, nil
+			}
+		}
+	}
+
+	addr := &netlink.Addr{IPNet: ip4Net.ToIPNet(), Label: ""}
+	if err = netlink.AddrAdd(link, addr); err != nil {
+		return "", fmt.Errorf("failed to add IP addr to %q: %v", br.Name, err)
+	}
+
+	return ip4Net.String(), nil
 }

@@ -41,6 +41,7 @@ import (
 const (
 	defaultSubnetFile = "/run/flannel/subnet.env"
 	defaultDataDir    = "/var/lib/cni/flannel"
+	defaultBridgeName = "cni0"
 )
 
 type NetConf struct {
