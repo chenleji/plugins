@@ -166,10 +166,10 @@ func getIpRangeWithoutGwByCIDR(cidr, gw string) (string, string, error) {
 
 	// skip gateway ip
 	if gw == ips[len(ips)-2] {
-		return ips[1], ips[len(ips)-3], nil
+		return ips[2], ips[len(ips)-3], nil
 	}
 	// remove network address and broadcast address
-	return ips[1], ips[len(ips)-2], nil
+	return ips[2], ips[len(ips)-2], nil
 
 	//minIp := (ip.FromIP(ipc) + 1).String()
 	//maxIp := (ip.FromIP(ipOrMask(ipc, ipNet.Mask)) - 1).String()
