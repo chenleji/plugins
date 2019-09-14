@@ -42,8 +42,7 @@ func doCmdAdd(args *skel.CmdArgs, n *NetConf, fenv *subnetEnv) error {
 
 	if !hasKey(n.Delegate, "ipMasq") {
 		// if yonghui is not doing ipmasq, we should
-		ipmasq := !*fenv.ipmasq
-		n.Delegate["ipMasq"] = ipmasq
+		n.Delegate["ipMasq"] = false
 	}
 
 	if !hasKey(n.Delegate, "mtu") {
