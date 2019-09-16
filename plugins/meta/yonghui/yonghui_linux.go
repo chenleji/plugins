@@ -92,7 +92,7 @@ func doCmdAdd(args *skel.CmdArgs, n *NetConf, fenv *subnetEnv) error {
 	}
 
 	// cluster ip range
-	_, clusterIpn, err := net.ParseCIDR("10.96.0.1/12")
+	_, clusterIpn, err := net.ParseCIDR(*fenv.cipr)
 	if err != nil {
 		panic(err)
 	}

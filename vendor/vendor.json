@@ -16,6 +16,12 @@
 			"revisionTime": "2019-08-28T18:43:39Z"
 		},
 		{
+			"checksumSHA1": "QqDq2x8XOU7IoOR98Cx1eiV5QY8=",
+			"path": "gopkg.in/yaml.v2",
+			"revision": "51d6538a90f86fe93ac480b35f37b2be17fef232",
+			"revisionTime": "2018-11-15T11:05:04Z"
+		},
+		{
 			"checksumSHA1": "LobRZAL8uT3gO/rWKF9ya0hpNLg=",
 			"origin": "github.com/coreos/flannel/vendor/k8s.io/utils/exec",
 			"path": "k8s.io/utils/exec",

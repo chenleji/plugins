@@ -39,9 +39,9 @@ import (
 )
 
 const (
-	defaultSubnetFile = "/run/flannel/subnet.env"
-	defaultDataDir    = "/var/lib/cni/flannel"
-	defaultBridgeName = "cni0"
+	defaultSubnetFile          = "/run/flannel/subnet.env"
+	defaultDataDir             = "/var/lib/cni/flannel"
+	defaultBridgeName          = "cni0"
 )
 
 type NetConf struct {
@@ -58,6 +58,7 @@ type subnetEnv struct {
 	sn     *net.IPNet
 	mtu    *uint
 	ipmasq *bool
+	cipr   *string
 }
 
 func (se *subnetEnv) missing() string {
@@ -74,6 +75,9 @@ func (se *subnetEnv) missing() string {
 	}
 	if se.ipmasq == nil {
 		m = append(m, "FLANNEL_IPMASQ")
+	}
+	if se.cipr == nil {
+		m = append(m, "FLANNEL_CLUSTERIPRANGE")
 	}
 	return strings.Join(m, ", ")
 }
@@ -126,6 +130,10 @@ func loadFlannelSubnetEnv(fn string) (*subnetEnv, error) {
 		case "FLANNEL_IPMASQ":
 			ipmasq := parts[1] == "true"
 			se.ipmasq = &ipmasq
+
+		case "FLANNEL_CLUSTERIPRANGE":
+			clusterIpRange := parts[1]
+			se.cipr = &clusterIpRange
 		}
 	}
 	if err := s.Err(); err != nil {
